@@ -95,6 +95,9 @@ const newLecturer = getEmitter()
     .on('begin', newStudent.Sally, function () {
         this.focus += 10;
     })
+    .on('beginn', newStudent.Sam, function () {
+        this.focus *= 0.9;
+    })
     .on('listen', newStudent.Sally, function () {
         globalFocus *= 0.7;
     })
@@ -119,11 +122,19 @@ describe('new lecturer', () => {
             'Sam(110,55); Sally(120,60)'
         );
     });
+    it('событие beginn не удалено', () => {
+        newLecturer.emit('beginn');
+        assert.strictEqual(
+            getState(newStudent),
+            'Sam(99,55); Sally(120,60)'
+        );
+    });
     it('обрабатывает в порядке подписки', () => {
         newLecturer.emit('listen');
         assert.strictEqual(globalFocus, 73);
 
     });
+
     if (isStar)
     {
         const starStudent = {

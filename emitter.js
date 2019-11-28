@@ -88,7 +88,7 @@ function getEmitter() {
          */
         off: function (event, context) {
             for (let e of this.events) {
-                if (e.indexOf(event) !== -1 && context.hasOwnProperty(e)) {
+                if ((e.indexOf(event + '.') !== -1 || e === event) && context.hasOwnProperty(e)) {
                     delete context[e];
                 }
             }
