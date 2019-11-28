@@ -72,6 +72,8 @@ const lecturer = getEmitter()
         this.wisdom -= 10;
     });
 
+let globalFocus = 90;
+
 const newStudent = {
     Sam: {
         focus: 100,
@@ -92,6 +94,12 @@ const newLecturer = getEmitter()
     })
     .on('begin', newStudent.Sally, function () {
         this.focus += 10;
+    })
+    .on('listen', newStudent.Sally, function () {
+        globalFocus *= 0.7;
+    })
+    .on('listen', newStudent.Sam, function () {
+        globalFocus += 10;
     });
 
 describe('new lecturer', () => {
@@ -110,6 +118,11 @@ describe('new lecturer', () => {
             getState(newStudent),
             'Sam(110,55); Sally(120,60)'
         );
+    });
+    it('обрабатывает в порядке подписки', () => {
+        newLecturer.emit('listen');
+        assert.strictEqual(globalFocus, 73);
+
     });
     if (isStar)
     {

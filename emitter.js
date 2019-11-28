@@ -12,7 +12,7 @@ const isStar = true;
  */
 function getEmitter() {
     return {
-        students: [],
+        students: {},
         events: [],
         severalTimes: [],
 
@@ -45,7 +45,10 @@ function getEmitter() {
         },
 
         callHandler: function (part) {
-            for (let student of this.students) {
+            if (!this.students.hasOwnProperty(part)) {
+                return;
+            }
+            for (let student of this.students[part]) {
                 if (student.hasOwnProperty(part)) {
                     this.callAllHandlers(student, part);
                 }
@@ -60,12 +63,14 @@ function getEmitter() {
          * @returns {Object}
          */
         on: function (event, context, handler) {
-            if (this.students.indexOf(context) === -1) {
-                this.students.push(context);
-            }
             if (this.events.indexOf(event) === -1) {
                 this.events.push(event);
+                this.students[event] = [context];
+
+            } else if (this.students[event].indexOf(context) === -1) {
+                this.students[event].push(context);
             }
+
             if (context.hasOwnProperty(event)) {
                 context[event].handlers.push(handler);
             } else {
