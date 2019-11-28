@@ -111,6 +111,41 @@ describe('new lecturer', () => {
             'Sam(110,55); Sally(120,60)'
         );
     });
+    if (isStar)
+    {
+        const starStudent = {
+            Sam: {
+                focus: 100,
+                wisdom: 50
+            },
+            Sally: {
+                focus: 100,
+                wisdom: 60
+            }
+        };
+
+        const starLecturer = getEmitter()
+            .several('begin', starStudent.Sam, function () {
+                this.focus += 10;
+            }, 2)
+            .several('begin', starStudent.Sam, function () {
+                this.wisdom += 5;
+            }, 3);
+
+        describe('star lecturer', () => {
+            it('должен выполнить обе функции', () => {
+                starLecturer
+                    .emit('begin')
+                    .emit('begin')
+                    .emit('begin')
+                    .emit('begin');
+                assert.strictEqual(
+                    getState(starStudent),
+                    'Sam(120,65); Sally(100,60)'
+                );
+            });
+        });
+    }
 });
 
 describe('lecturer-emitter', () => {

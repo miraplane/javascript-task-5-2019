@@ -29,16 +29,25 @@ function getEmitter() {
 
                     return false;
                 }
+
                 handler.count = 1;
             }
 
             return true;
         },
 
+        callAllHandlers: function (student, part) {
+            for (let handler of student[part].handlers) {
+                if (this.checkHandler(handler)) {
+                    handler.call(student);
+                }
+            }
+        },
+
         callHandler: function (part) {
             for (let student of this.students) {
-                if (student.hasOwnProperty(part) && this.checkHandler(student[part])) {
-                    student[part]();
+                if (student.hasOwnProperty(part)) {
+                    this.callAllHandlers(student, part);
                 }
             }
         },
@@ -58,13 +67,9 @@ function getEmitter() {
                 this.events.push(event);
             }
             if (context.hasOwnProperty(event)) {
-                let currentHandler = context[event];
-                context[event] = function (oldHandler, newHandler) {
-                    oldHandler.call(this);
-                    newHandler.call(this);
-                }.bind(context, currentHandler, handler);
+                context[event].handlers.push(handler);
             } else {
-                context[event] = handler;
+                context[event] = { handlers: [handler] };
             }
 
             return this;
@@ -111,10 +116,10 @@ function getEmitter() {
          * @returns {Object}
          */
         several: function (event, context, handler, times) {
-            this.on(event, context, handler);
             if (times > 0) {
-                context[event].timer = times;
+                handler.timer = times;
             }
+            this.on(event, context, handler);
 
             return this;
         },
@@ -129,11 +134,11 @@ function getEmitter() {
          * @returns {Object}
          */
         through: function (event, context, handler, frequency) {
-            this.on(event, context, handler);
             if (frequency > 0) {
-                context[event].count = frequency;
-                context[event].every = frequency;
+                handler.count = frequency;
+                handler.every = frequency;
             }
+            this.on(event, context, handler);
 
             return this;
         }
