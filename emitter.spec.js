@@ -9,7 +9,7 @@ const { getEmitter, isStar } = require('./emitter');
 const students = {
     Sam: {
         focus: 100,
-        wisdom: 50
+            wisdom: 50
     },
     Sally: {
         focus: 100,
@@ -71,6 +71,47 @@ const lecturer = getEmitter()
         this.focus += 10;
         this.wisdom -= 10;
     });
+
+const newStudent = {
+    Sam: {
+        focus: 100,
+        wisdom: 50
+    },
+    Sally: {
+        focus: 100,
+        wisdom: 60
+    }
+};
+
+const newLecturer = getEmitter()
+    .on('begin', newStudent.Sam, function () {
+        this.focus += 10;
+    })
+    .on('begin', newStudent.Sam, function () {
+        this.wisdom += 5;
+    })
+    .on('begin', newStudent.Sally, function () {
+        this.focus += 10;
+    });
+
+describe('new lecturer', () => {
+    it('должен выполнить обе функции', () => {
+        newLecturer.emit('begin');
+        assert.strictEqual(
+            getState(newStudent),
+            'Sam(110,55); Sally(110,60)'
+        );
+    });
+    it('удаляет оба события', () => {
+        newLecturer
+            .off('begin', newStudent.Sam)
+            .emit('begin');
+        assert.strictEqual(
+            getState(newStudent),
+            'Sam(110,55); Sally(120,60)'
+        );
+    });
+});
 
 describe('lecturer-emitter', () => {
     it('должен всех оповестить о старте лекции', () => {
@@ -204,17 +245,17 @@ describe('lecturer-emitter', () => {
             });
         });
     }
-
-    function getState(students) {
-        return Object.keys(students)
-            .map(name => [
-                name,
-                '(',
-                students[name].focus,
-                ',',
-                students[name].wisdom,
-                ')'
-            ].join(''))
-            .join('; ');
-    }
 });
+
+function getState(students) {
+    return Object.keys(students)
+        .map(name => [
+            name,
+            '(',
+            students[name].focus,
+            ',',
+            students[name].wisdom,
+            ')'
+        ].join(''))
+        .join('; ');
+}

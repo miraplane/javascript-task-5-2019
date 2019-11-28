@@ -57,7 +57,15 @@ function getEmitter() {
             if (this.events.indexOf(event) === -1) {
                 this.events.push(event);
             }
-            context[event] = handler;
+            if (context.hasOwnProperty(event)) {
+                let currentHandler = context[event];
+                context[event] = function (oldHandler, newHandler) {
+                    oldHandler.call(this);
+                    newHandler.call(this);
+                }.bind(context, currentHandler, handler);
+            } else {
+                context[event] = handler;
+            }
 
             return this;
         },
