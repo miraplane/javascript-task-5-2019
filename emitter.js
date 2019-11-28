@@ -4,7 +4,7 @@
  * Сделано задание на звездочку
  * Реализованы методы several и through
  */
-const isStar = true;
+const isStar = false;
 
 /**
  * Возвращает новый emitter
@@ -13,7 +13,6 @@ const isStar = true;
 function getEmitter() {
     return {
         students: {},
-        severalTimes: [],
 
         checkHandler: function (handler) {
             if (handler.hasOwnProperty('timer')) {

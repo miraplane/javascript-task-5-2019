@@ -126,7 +126,6 @@ describe('new lecturer', () => {
     it('удаляет оба события', () => {
         newLecturer
             .off('begin', newStudent.Sam)
-            .off('begin', newStudent.Sam)
             .emit('begin');
         assert.strictEqual(
             getState(newStudent),
