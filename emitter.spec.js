@@ -103,7 +103,17 @@ const newLecturer = getEmitter()
     })
     .on('listen', newStudent.Sam, function () {
         globalFocus += 10;
+    })
+    .on('dontListen', newStudent.Sam, function () {
+        globalFocus -= 10;
+    })
+    .on('dontListen', newStudent.Sally, function () {
+        globalFocus -= 20;
+    })
+    .on('dontListen', newStudent.Sam, function () {
+        globalFocus *= 0.9;
     });
+
 
 describe('new lecturer', () => {
     it('должен выполнить обе функции', () => {
@@ -115,6 +125,7 @@ describe('new lecturer', () => {
     });
     it('удаляет оба события', () => {
         newLecturer
+            .off('begin', newStudent.Sam)
             .off('begin', newStudent.Sam)
             .emit('begin');
         assert.strictEqual(
@@ -132,6 +143,11 @@ describe('new lecturer', () => {
     it('обрабатывает в порядке подписки', () => {
         newLecturer.emit('listen');
         assert.strictEqual(globalFocus, 73);
+
+    });
+    it('обрабатывает в порядке подписки 2', () => {
+        newLecturer.emit('dontListen');
+        assert.strictEqual(globalFocus, 38.7);
 
     });
 
@@ -154,7 +170,16 @@ describe('new lecturer', () => {
             }, 2)
             .several('begin', starStudent.Sam, function () {
                 this.wisdom += 5;
-            }, 3);
+            }, 3)
+            .several('slide', starStudent.Sally, function () {
+                this.focus += 1;
+            }, -10)
+            .through('listen', starStudent.Sam, function () {
+                this.wisdom += 0.1 * this.focus;
+            }, 2)
+            .through('listen', starStudent.Sam, function () {
+                this.focus += 5;
+            }, 5);
 
         describe('star lecturer', () => {
             it('должен выполнить обе функции', () => {
@@ -168,6 +193,31 @@ describe('new lecturer', () => {
                     'Sam(120,65); Sally(100,60)'
                 );
             });
+            it('работает как on', () => {
+                starLecturer
+                    .emit('slide')
+                    .emit('slide')
+                    .emit('slide')
+                    .emit('slide')
+                    .emit('slide');
+                assert.strictEqual(
+                    getState(starStudent),
+                    'Sam(120,65); Sally(105,60)'
+                );
+            });
+            it('в правильном порядке', () => {
+                starLecturer
+                    .emit('listen')
+                    .emit('listen')
+                    .emit('listen')
+                    .emit('listen')
+                    .emit('listen')
+                    .emit('listen');
+                assert.strictEqual(
+                    getState(starStudent),
+                    'Sam(130,102); Sally(105,60)'
+                );
+            })
         });
     }
 });

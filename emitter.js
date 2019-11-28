@@ -13,7 +13,6 @@ const isStar = true;
 function getEmitter() {
     return {
         students: {},
-        events: [],
         severalTimes: [],
 
         checkHandler: function (handler) {
@@ -37,11 +36,11 @@ function getEmitter() {
         },
 
         callAllHandlers: function (student, part) {
-            for (let handler of student[part].handlers) {
-                if (this.checkHandler(handler)) {
-                    handler.call(student);
-                }
+            let handler = student[part].handlers[student[part].count];
+            if (this.checkHandler(handler)) {
+                handler.call(student);
             }
+            student[part].count = (student[part].count + 1) % student[part].handlers.length;
         },
 
         callHandler: function (part) {
@@ -63,18 +62,17 @@ function getEmitter() {
          * @returns {Object}
          */
         on: function (event, context, handler) {
-            if (this.events.indexOf(event) === -1) {
-                this.events.push(event);
+            if (!this.students.hasOwnProperty(event)) {
                 this.students[event] = [context];
 
-            } else if (this.students[event].indexOf(context) === -1) {
+            } else {
                 this.students[event].push(context);
             }
 
             if (context.hasOwnProperty(event)) {
                 context[event].handlers.push(handler);
             } else {
-                context[event] = { handlers: [handler] };
+                context[event] = { handlers: [handler], count: 0 };
             }
 
             return this;
@@ -87,7 +85,7 @@ function getEmitter() {
          * @returns {Object}
          */
         off: function (event, context) {
-            for (let e of this.events) {
+            for (let e of Object.getOwnPropertyNames(this.students)) {
                 if ((e.indexOf(event + '.') !== -1 || e === event) && context.hasOwnProperty(e)) {
                     delete context[e];
                 }
