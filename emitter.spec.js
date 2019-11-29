@@ -26,19 +26,19 @@ const students = {
 };
 
 const lecturer = getEmitter()
-    .on('begin', students.Sam, function () {
+    .several('begin', students.Sam, function () {
         this.focus += 10;
-    })
-    .on('begin', students.Sally, function () {
+    }, -6)
+    .several('begin', students.Sally, function () {
         this.focus += 10;
-    })
-    .on('begin', students.Bill, function () {
+    }, 0)
+    .through('begin', students.Bill, function () {
         this.focus += 10;
         this.wisdom += 5;
-    })
-    .on('begin', students.Sharon, function () {
+    }, -6)
+    .through('begin', students.Sharon, function () {
         this.focus += 20;
-    })
+    }, 0)
     .on('slide', students.Sam, function () {
         this.wisdom += Math.round(this.focus * 0.1);
         this.focus -= 10;

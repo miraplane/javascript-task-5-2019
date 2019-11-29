@@ -4,7 +4,7 @@
  * Сделано задание на звездочку
  * Реализованы методы several и through
  */
-const isStar = false;
+const isStar = true;
 
 /**
  * Возвращает новый emitter
@@ -34,21 +34,13 @@ function getEmitter() {
             return true;
         },
 
-        callAllHandlers: function (student, part) {
-            let handler = student[part].handlers[student[part].count];
-            if (this.checkHandler(handler)) {
-                handler.call(student);
-            }
-            student[part].count = (student[part].count + 1) % student[part].handlers.length;
-        },
-
         callHandler: function (part) {
             if (!this.students.hasOwnProperty(part)) {
                 return;
             }
-            for (let student of this.students[part]) {
-                if (student.hasOwnProperty(part)) {
-                    this.callAllHandlers(student, part);
+            for (let event of this.students[part]) {
+                if (this.checkHandler(event.handler)) {
+                    event.handler.call(event.context);
                 }
             }
         },
@@ -62,16 +54,10 @@ function getEmitter() {
          */
         on: function (event, context, handler) {
             if (!this.students.hasOwnProperty(event)) {
-                this.students[event] = [context];
+                this.students[event] = [{ context: context, handler: handler }];
 
             } else {
-                this.students[event].push(context);
-            }
-
-            if (context.hasOwnProperty(event)) {
-                context[event].handlers.push(handler);
-            } else {
-                context[event] = { handlers: [handler], count: 0 };
+                this.students[event].push({ context: context, handler: handler });
             }
 
             return this;
@@ -84,9 +70,11 @@ function getEmitter() {
          * @returns {Object}
          */
         off: function (event, context) {
-            for (let e of Object.getOwnPropertyNames(context)) {
+            for (let e of Object.getOwnPropertyNames(this.students)) {
                 if (event === e || e.indexOf(event + '.') === 0) {
-                    delete context[e];
+                    this.students[e] = this.students[e].filter(
+                        handler => handler.context !== context
+                    );
                 }
             }
 
