@@ -118,10 +118,11 @@ function getEmitter() {
          * @returns {Object}
          */
         several: function (event, context, handler, times) {
+            let bindHandler = handler.bind(context);
             if (times > 0) {
-                handler.timer = times;
+                bindHandler.timer = times;
             }
-            this.on(event, context, handler);
+            this.on(event, context, bindHandler);
 
             return this;
         },
@@ -136,11 +137,12 @@ function getEmitter() {
          * @returns {Object}
          */
         through: function (event, context, handler, frequency) {
+            let bindHandler = handler.bind(context);
             if (frequency > 0) {
-                handler.count = frequency;
-                handler.every = frequency;
+                bindHandler.count = frequency;
+                bindHandler.every = frequency;
             }
-            this.on(event, context, handler);
+            this.on(event, context, bindHandler);
 
             return this;
         }

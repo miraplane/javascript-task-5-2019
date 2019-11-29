@@ -85,16 +85,16 @@ const newStudent = {
     }
 };
 
+const addToFocus = function () {
+    this.focus += 10;
+};
+
 const newLecturer = getEmitter()
-    .on('begin', newStudent.Sam, function () {
-        this.focus += 10;
-    })
+    .on('begin', newStudent.Sam, addToFocus)
     .on('begin', newStudent.Sam, function () {
         this.wisdom += 5;
     })
-    .on('begin', newStudent.Sally, function () {
-        this.focus += 10;
-    })
+    .on('begin', newStudent.Sally, addToFocus)
     .on('beginn', newStudent.Sam, function () {
         this.focus *= 0.9;
     })
@@ -193,6 +193,10 @@ describe('new lecturer', () => {
             }
         };
 
+        const watchSlide = function () {
+            this.focus += 20;
+        };
+
         const starLecturer = getEmitter()
             .several('begin', starStudent.Sam, function () {
                 this.focus += 10;
@@ -208,7 +212,9 @@ describe('new lecturer', () => {
             }, 2)
             .through('listen', starStudent.Sam, function () {
                 this.focus += 5;
-            }, 5);
+            }, 5)
+            .several('watch', starStudent.Sam, watchSlide, 2)
+            .several('watch', starStudent.Sally, watchSlide, 2);
 
         describe('star lecturer', () => {
             it('должен выполнить обе функции', () => {
@@ -246,7 +252,16 @@ describe('new lecturer', () => {
                     getState(starStudent),
                     'Sam(130,102); Sally(105,60)'
                 );
-            })
+            });
+            it('для каждого сработает дважды', () => {
+                starLecturer
+                    .emit('watch')
+                    .emit('watch');
+                assert.strictEqual(
+                    getState(starStudent),
+                    'Sam(170,102); Sally(145,60)'
+                );
+            });
         });
     }
 });
