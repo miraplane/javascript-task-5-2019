@@ -4,7 +4,7 @@
  * Сделано задание на звездочку
  * Реализованы методы several и through
  */
-const isStar = false;
+const isStar = true;
 
 /**
  * Возвращает новый emitter
@@ -84,8 +84,8 @@ function getEmitter() {
          * @returns {Object}
          */
         off: function (event, context) {
-            for (let e of Object.getOwnPropertyNames(this.students)) {
-                if ((e.indexOf(event + '.') !== -1 || e === event) && context.hasOwnProperty(e)) {
+            for (let e of Object.getOwnPropertyNames(context)) {
+                if (event === e || e.indexOf(event + '.') === 0) {
                     delete context[e];
                 }
             }

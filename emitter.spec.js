@@ -112,6 +112,18 @@ const newLecturer = getEmitter()
     })
     .on('dontListen', newStudent.Sam, function () {
         globalFocus *= 0.9;
+    })
+    .on('slide', newStudent.Sally, function () {
+        this.wisdom += 10;
+    })
+    .on('slide.funny', newStudent.Sally, function () {
+        this.wisdom -= 5;
+    })
+    .on('slide.funny.image', newStudent.Sally, function () {
+        this.wisdom -= 3;
+    })
+    .on('funny', newStudent.Sally, function () {
+        this.wisdom -= 10;
     });
 
 
@@ -137,6 +149,24 @@ describe('new lecturer', () => {
         assert.strictEqual(
             getState(newStudent),
             'Sam(99,55); Sally(120,60)'
+        );
+    });
+    it('удаляет только более спецефичные события', () => {
+        newLecturer
+            .off('funny', newStudent.Sally)
+            .emit('slide.funny.image');
+        assert.strictEqual(
+            getState(newStudent),
+            'Sam(99,55); Sally(120,62)'
+        );
+    });
+    it('удаляет только более спецефичные события 2', () => {
+        newLecturer
+            .off('slide.funny', newStudent.Sally)
+            .emit('slide.funny.image');
+        assert.strictEqual(
+            getState(newStudent),
+            'Sam(99,55); Sally(120,72)'
         );
     });
     it('обрабатывает в порядке подписки', () => {
