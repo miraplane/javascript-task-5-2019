@@ -4,7 +4,7 @@
  * Сделано задание на звездочку
  * Реализованы методы several и through
  */
-const isStar = true;
+const isStar = false;
 
 /**
  * Возвращает новый emitter
@@ -16,13 +16,13 @@ function getEmitter() {
 
         checkHandler: function (handler) {
             if (handler.hasOwnProperty('timer')) {
-                if (handler.timer === 0) {
+                if (handler.timer <= 0) {
                     return false;
                 }
                 handler.timer -= 1;
             }
             if (handler.hasOwnProperty('every')) {
-                if (handler.count !== handler.every) {
+                if (handler.count < handler.every) {
                     handler.count += 1;
 
                     return false;
@@ -122,9 +122,8 @@ function getEmitter() {
             if (times > 0) {
                 bindHandler.timer = times;
             }
-            this.on(event, context, bindHandler);
 
-            return this;
+            return this.on(event, context, bindHandler);
         },
 
         /**
@@ -142,9 +141,8 @@ function getEmitter() {
                 bindHandler.count = frequency;
                 bindHandler.every = frequency;
             }
-            this.on(event, context, bindHandler);
 
-            return this;
+            return this.on(event, context, bindHandler);
         }
     };
 }

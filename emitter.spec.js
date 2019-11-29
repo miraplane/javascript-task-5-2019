@@ -214,7 +214,19 @@ describe('new lecturer', () => {
                 this.focus += 5;
             }, 5)
             .several('watch', starStudent.Sam, watchSlide, 2)
-            .several('watch', starStudent.Sally, watchSlide, 2);
+            .several('watch', starStudent.Sally, watchSlide, 2)
+            .on('talk', starStudent.Sam, function () {
+                this.wisdom += 5;
+            })
+            .through('talk', starStudent.Sam, function () {
+                this.focus += 5;
+            }, 2)
+            .on('talk', starStudent.Sally, function () {
+                this.wisdom += 5;
+            })
+            .several('talk', starStudent.Sally, function () {
+                this.focus += 5;
+            }, 2);
 
         describe('star lecturer', () => {
             it('должен выполнить обе функции', () => {
@@ -260,6 +272,26 @@ describe('new lecturer', () => {
                 assert.strictEqual(
                     getState(starStudent),
                     'Sam(170,102); Sally(145,60)'
+                );
+            });
+            it('работают одновременно', () => {
+                starLecturer
+                    .emit('talk')
+                    .emit('talk')
+                    .emit('talk')
+                    .emit('talk');
+                assert.strictEqual(
+                    getState(starStudent),
+                    'Sam(180,122); Sally(155,80)'
+                );
+            });
+            it('отключает все события', () => {
+                starLecturer
+                    .off('talk', starStudent.Sam)
+                    .emit('talk');
+                assert.strictEqual(
+                    getState(starStudent),
+                    'Sam(180,122); Sally(155,85)'
                 );
             });
         });
