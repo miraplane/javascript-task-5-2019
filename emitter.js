@@ -12,9 +12,9 @@ const isStar = true;
  */
 function getEmitter() {
     return {
-        students: {},
+        eventHandlersMap: {},
 
-        checkHandler: function (handler) {
+        isAvailableHandler: function (handler) {
             if (handler.hasOwnProperty('timer')) {
                 if (handler.timer <= 0) {
                     return false;
@@ -34,13 +34,11 @@ function getEmitter() {
             return true;
         },
 
-        callHandler: function (part) {
-            if (!this.students.hasOwnProperty(part)) {
-                return;
-            }
-            for (let event of this.students[part]) {
-                if (this.checkHandler(event.handler)) {
-                    event.handler.call(event.context);
+        callHandlersForEvent: function (event) {
+            const handlers = this.eventHandlersMap[event] || [];
+            for (let handler of handlers) {
+                if (this.isAvailableHandler(handler.handler)) {
+                    handler.handler.call(handler.context);
                 }
             }
         },
@@ -53,12 +51,10 @@ function getEmitter() {
          * @returns {Object}
          */
         on: function (event, context, handler) {
-            if (!this.students.hasOwnProperty(event)) {
-                this.students[event] = [{ context: context, handler: handler }];
-
-            } else {
-                this.students[event].push({ context: context, handler: handler });
+            if (!this.eventHandlersMap[event]) {
+                this.eventHandlersMap[event] = [];
             }
+            this.eventHandlersMap[event].push({ context, handler });
 
             return this;
         },
@@ -70,9 +66,9 @@ function getEmitter() {
          * @returns {Object}
          */
         off: function (event, context) {
-            for (let e of Object.getOwnPropertyNames(this.students)) {
-                if (event === e || e.indexOf(event + '.') === 0) {
-                    this.students[e] = this.students[e].filter(
+            for (let key of Object.keys(this.eventHandlersMap)) {
+                if (event === key || key.indexOf(event + '.') === 0) {
+                    this.eventHandlersMap[key] = this.eventHandlersMap[key].filter(
                         handler => handler.context !== context
                     );
                 }
@@ -90,7 +86,7 @@ function getEmitter() {
             let handler = event.split('.');
             for (let i = handler.length; i > 0; i--) {
                 let part = handler.slice(0, i).join('.');
-                this.callHandler(part);
+                this.callHandlersForEvent(part);
             }
 
             return this;
