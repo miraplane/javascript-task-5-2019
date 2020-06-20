@@ -9,7 +9,7 @@ const { getEmitter, isStar } = require('./emitter');
 const students = {
     Sam: {
         focus: 100,
-        wisdom: 50
+            wisdom: 50
     },
     Sally: {
         focus: 100,
@@ -26,19 +26,19 @@ const students = {
 };
 
 const lecturer = getEmitter()
-    .on('begin', students.Sam, function () {
+    .several('begin', students.Sam, function () {
         this.focus += 10;
-    })
-    .on('begin', students.Sally, function () {
+    }, -6)
+    .several('begin', students.Sally, function () {
         this.focus += 10;
-    })
-    .on('begin', students.Bill, function () {
+    }, 0)
+    .through('begin', students.Bill, function () {
         this.focus += 10;
         this.wisdom += 5;
-    })
-    .on('begin', students.Sharon, function () {
+    }, -6)
+    .through('begin', students.Sharon, function () {
         this.focus += 20;
-    })
+    }, 0)
     .on('slide', students.Sam, function () {
         this.wisdom += Math.round(this.focus * 0.1);
         this.focus -= 10;
@@ -71,6 +71,232 @@ const lecturer = getEmitter()
         this.focus += 10;
         this.wisdom -= 10;
     });
+
+let globalFocus = 90;
+
+const newStudent = {
+    Sam: {
+        focus: 100,
+        wisdom: 50
+    },
+    Sally: {
+        focus: 100,
+        wisdom: 60
+    }
+};
+
+const addToFocus = function () {
+    this.focus += 10;
+};
+
+const newLecturer = getEmitter()
+    .on('begin', newStudent.Sam, addToFocus)
+    .on('begin', newStudent.Sam, function () {
+        this.wisdom += 5;
+    })
+    .on('begin', newStudent.Sally, addToFocus)
+    .on('beginn', newStudent.Sam, function () {
+        this.focus *= 0.9;
+    })
+    .on('listen', newStudent.Sally, function () {
+        globalFocus *= 0.7;
+    })
+    .on('listen', newStudent.Sam, function () {
+        globalFocus += 10;
+    })
+    .on('dontListen', newStudent.Sam, function () {
+        globalFocus -= 10;
+    })
+    .on('dontListen', newStudent.Sally, function () {
+        globalFocus -= 20;
+    })
+    .on('dontListen', newStudent.Sam, function () {
+        globalFocus *= 0.9;
+    })
+    .on('slide', newStudent.Sally, function () {
+        this.wisdom += 10;
+    })
+    .on('slide.funny', newStudent.Sally, function () {
+        this.wisdom -= 5;
+    })
+    .on('slide.funny.image', newStudent.Sally, function () {
+        this.wisdom -= 3;
+    })
+    .on('funny', newStudent.Sally, function () {
+        this.wisdom -= 10;
+    });
+
+
+describe('new lecturer', () => {
+    it('должен выполнить обе функции', () => {
+        newLecturer.emit('begin');
+        assert.strictEqual(
+            getState(newStudent),
+            'Sam(110,55); Sally(110,60)'
+        );
+    });
+    it('удаляет оба события', () => {
+        newLecturer
+            .off('begin', newStudent.Sam)
+            .emit('begin');
+        assert.strictEqual(
+            getState(newStudent),
+            'Sam(110,55); Sally(120,60)'
+        );
+    });
+    it('событие beginn не удалено', () => {
+        newLecturer.emit('beginn');
+        assert.strictEqual(
+            getState(newStudent),
+            'Sam(99,55); Sally(120,60)'
+        );
+    });
+    it('удаляет только более спецефичные события', () => {
+        newLecturer
+            .off('funny', newStudent.Sally)
+            .emit('slide.funny.image');
+        assert.strictEqual(
+            getState(newStudent),
+            'Sam(99,55); Sally(120,62)'
+        );
+    });
+    it('удаляет только более спецефичные события 2', () => {
+        newLecturer
+            .off('slide.funny', newStudent.Sally)
+            .emit('slide.funny.image');
+        assert.strictEqual(
+            getState(newStudent),
+            'Sam(99,55); Sally(120,72)'
+        );
+    });
+    it('обрабатывает в порядке подписки', () => {
+        newLecturer.emit('listen');
+        assert.strictEqual(globalFocus, 73);
+
+    });
+    it('обрабатывает в порядке подписки 2', () => {
+        newLecturer.emit('dontListen');
+        assert.strictEqual(globalFocus, 38.7);
+
+    });
+
+    if (isStar)
+    {
+        const starStudent = {
+            Sam: {
+                focus: 100,
+                wisdom: 50
+            },
+            Sally: {
+                focus: 100,
+                wisdom: 60
+            }
+        };
+
+        const watchSlide = function () {
+            this.focus += 20;
+        };
+
+        const starLecturer = getEmitter()
+            .several('begin', starStudent.Sam, function () {
+                this.focus += 10;
+            }, 2)
+            .several('begin', starStudent.Sam, function () {
+                this.wisdom += 5;
+            }, 3)
+            .several('slide', starStudent.Sally, function () {
+                this.focus += 1;
+            }, -10)
+            .through('listen', starStudent.Sam, function () {
+                this.wisdom += 0.1 * this.focus;
+            }, 2)
+            .through('listen', starStudent.Sam, function () {
+                this.focus += 5;
+            }, 5)
+            .several('watch', starStudent.Sam, watchSlide, 2)
+            .several('watch', starStudent.Sally, watchSlide, 2)
+            .on('talk', starStudent.Sam, function () {
+                this.wisdom += 5;
+            })
+            .through('talk', starStudent.Sam, function () {
+                this.focus += 5;
+            }, 2)
+            .on('talk', starStudent.Sally, function () {
+                this.wisdom += 5;
+            })
+            .several('talk', starStudent.Sally, function () {
+                this.focus += 5;
+            }, 2);
+
+        describe('star lecturer', () => {
+            it('должен выполнить обе функции', () => {
+                starLecturer
+                    .emit('begin')
+                    .emit('begin')
+                    .emit('begin')
+                    .emit('begin');
+                assert.strictEqual(
+                    getState(starStudent),
+                    'Sam(120,65); Sally(100,60)'
+                );
+            });
+            it('работает как on', () => {
+                starLecturer
+                    .emit('slide')
+                    .emit('slide')
+                    .emit('slide')
+                    .emit('slide')
+                    .emit('slide');
+                assert.strictEqual(
+                    getState(starStudent),
+                    'Sam(120,65); Sally(105,60)'
+                );
+            });
+            it('в правильном порядке', () => {
+                starLecturer
+                    .emit('listen')
+                    .emit('listen')
+                    .emit('listen')
+                    .emit('listen')
+                    .emit('listen')
+                    .emit('listen');
+                assert.strictEqual(
+                    getState(starStudent),
+                    'Sam(130,102); Sally(105,60)'
+                );
+            });
+            it('для каждого сработает дважды', () => {
+                starLecturer
+                    .emit('watch')
+                    .emit('watch');
+                assert.strictEqual(
+                    getState(starStudent),
+                    'Sam(170,102); Sally(145,60)'
+                );
+            });
+            it('работают одновременно', () => {
+                starLecturer
+                    .emit('talk')
+                    .emit('talk')
+                    .emit('talk')
+                    .emit('talk');
+                assert.strictEqual(
+                    getState(starStudent),
+                    'Sam(180,122); Sally(155,80)'
+                );
+            });
+            it('отключает все события', () => {
+                starLecturer
+                    .off('talk', starStudent.Sam)
+                    .emit('talk');
+                assert.strictEqual(
+                    getState(starStudent),
+                    'Sam(180,122); Sally(155,85)'
+                );
+            });
+        });
+    }
+});
 
 describe('lecturer-emitter', () => {
     it('должен всех оповестить о старте лекции', () => {
@@ -204,17 +430,17 @@ describe('lecturer-emitter', () => {
             });
         });
     }
-
-    function getState(students) {
-        return Object.keys(students)
-            .map(name => [
-                name,
-                '(',
-                students[name].focus,
-                ',',
-                students[name].wisdom,
-                ')'
-            ].join(''))
-            .join('; ');
-    }
 });
+
+function getState(students) {
+    return Object.keys(students)
+        .map(name => [
+            name,
+            '(',
+            students[name].focus,
+            ',',
+            students[name].wisdom,
+            ')'
+        ].join(''))
+        .join('; ');
+}
